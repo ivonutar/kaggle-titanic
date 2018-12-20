@@ -79,7 +79,7 @@ whole_dataset['Sex_Code'] = label.fit_transform(whole_dataset['Sex'])
 whole_dataset["Embarked"] = whole_dataset["Embarked"].map({"S": 0, "C": 1, "Q": 2})
 whole_dataset['Embarked_Code'] = label.fit_transform(whole_dataset['Embarked'])
 
-whole_dataset['IsChild'] = [1 if i<16 else 0 for i in whole_dataset.Age]
+whole_dataset['IsChild'] = [1 if i < 16 else 0 for i in whole_dataset.Age]
 
 features = ['FareBin_Code', 'AgeBin_Code', 'Title_Code', 'Sex_Code', 'Embarked_Code', 'IsChild', 'Pclass']
 
@@ -96,23 +96,18 @@ X_train, x_test, Y_train, y_test = train_test_split(X_train, Y_train, test_size=
 
 # TODO Choose model
 random_state = 2
-classifiers = []
-classifiers.append(SVC(random_state=random_state))
-classifiers.append(DecisionTreeClassifier(random_state=random_state))
-classifiers.append(AdaBoostClassifier(DecisionTreeClassifier(random_state=random_state),random_state=random_state,learning_rate=0.1))
-classifiers.append(RandomForestClassifier(random_state=random_state))
-classifiers.append(ExtraTreesClassifier(random_state=random_state))
-classifiers.append(GradientBoostingClassifier(random_state=random_state))
-classifiers.append(MLPClassifier(random_state=random_state))
-classifiers.append(KNeighborsClassifier())
-classifiers.append(LogisticRegression(random_state = random_state))
-classifiers.append(LinearDiscriminantAnalysis())
+classifiers = [SVC(random_state=random_state), DecisionTreeClassifier(random_state=random_state),
+               AdaBoostClassifier(DecisionTreeClassifier(random_state=random_state), random_state=random_state,
+                                  learning_rate=0.1), RandomForestClassifier(random_state=random_state),
+               ExtraTreesClassifier(random_state=random_state), GradientBoostingClassifier(random_state=random_state),
+               MLPClassifier(random_state=random_state), KNeighborsClassifier(),
+               LogisticRegression(random_state=random_state), LinearDiscriminantAnalysis()]
 
 cv_results = []
 kfold = StratifiedKFold(n_splits=10)
 
-for classifier in classifiers :
-    cv_results.append(cross_val_score(classifier, X_train, y = Y_train, scoring = "accuracy", cv = kfold, n_jobs=4))
+for classifier in classifiers:
+    cv_results.append(cross_val_score(classifier, X_train, y=Y_train, scoring="accuracy", cv=kfold, n_jobs=4))
 cv_means = []
 cv_std = []
 for cv_result in cv_results:
@@ -127,7 +122,7 @@ classifier_index = cv_means.index(max(cv_means))
 y = train_dataset.Survived
 X = train_dataset[features]
 
-train_X, val_X, train_y, val_y = train_test_split(X, y, random_state = 0)
+train_X, val_X, train_y, val_y = train_test_split(X, y, random_state=0)
 # SVC
 model = classifiers[classifier_index]
 model.fit(train_X, train_y)
@@ -142,7 +137,7 @@ print("Cross validation score: {}".format(crossval))
 X_test = test_dataset[features]
 
 PassengerId = test_dataset['PassengerId']
-Submission=pd.DataFrame()
+Submission = pd.DataFrame()
 Submission['PassengerId'] = test_dataset['PassengerId'].astype(int)
 
 Submission['Survived'] = model.predict(X_test)
