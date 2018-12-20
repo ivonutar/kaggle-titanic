@@ -139,3 +139,12 @@ crossval = cv_means[classifier_index]
 print("Cross validation score: {}".format(crossval))
 
 # TODO Predict
+X_test = test_dataset[features]
+
+PassengerId = test_dataset['PassengerId']
+Submission=pd.DataFrame()
+Submission['PassengerId'] = test_dataset['PassengerId'].astype(int)
+
+Submission['Survived'] = model.predict(X_test)
+Submission['Survived'] = Submission['Survived'].astype(int)
+Submission.to_csv('predictions-main.csv', index=False)
