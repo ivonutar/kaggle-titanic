@@ -15,6 +15,9 @@ from sklearn.model_selection import train_test_split, cross_val_score, Stratifie
 train_dataset = pd.read_csv("data/train.csv", index_col=0)
 test_dataset = pd.read_csv("data/test.csv")
 
+# Concat dataframes for feature engineering
+train_dataset_len = len(train_dataset)
+whole_dataset = pd.concat([train_dataset, test_dataset], sort=False)
 
 # TODO Choose features
 # PassengerId,Survived,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked
@@ -24,45 +27,45 @@ features = features.split(',')
 # TODO fill NaNs
 # Fill Age
 # Add median, if no title, otherwise ??? older person with title
-age_filler = train_dataset['Age'].median()
-train_dataset['Age'] = train_dataset['Age'].fillna(age_filler)
+age_filler = whole_dataset['Age'].median()
+whole_dataset['Age'] = whole_dataset['Age'].fillna(age_filler)
 
 # File SibSp
-SibSp_filler = train_dataset['SibSp'].median()
-train_dataset['SibSp'] = train_dataset['SibSp'].fillna(SibSp_filler)
+SibSp_filler = whole_dataset['SibSp'].median()
+whole_dataset['SibSp'] = whole_dataset['SibSp'].fillna(SibSp_filler)
 
 # File Parch
-SibSp_filler = train_dataset['Parch'].median()
-train_dataset['Parch'] = train_dataset['Parch'].fillna(SibSp_filler)
+SibSp_filler = whole_dataset['Parch'].median()
+whole_dataset['Parch'] = whole_dataset['Parch'].fillna(SibSp_filler)
 
 # Fill ticket
-train_dataset['Ticket'] = train_dataset['Ticket'].fillna('0')
+whole_dataset['Ticket'] = whole_dataset['Ticket'].fillna('0')
 
 # Fill Fare
-SibSp_filler = train_dataset['Fare'].mean()
-train_dataset['Fare'] = train_dataset['Fare'].fillna('0')
+SibSp_filler = whole_dataset['Fare'].mean()
+whole_dataset['Fare'] = whole_dataset['Fare'].fillna(0)
 
 # Fill Cabin
 # A,B,C,D,E + number..., fill NaN with X0
-train_dataset['Cabin'] = train_dataset['Cabin'].fillna('X0')
+whole_dataset['Cabin'] = whole_dataset['Cabin'].fillna('X0')
 
 # Fill Embarked
-# train_dataset['Embarked'] = train_dataset['Embarked'].median()
+# whole_dataset['Embarked'] = whole_dataset['Embarked'].median()
 
 # TODO engineer features
 
 # Fare categories
 label = LabelEncoder()
-train_dataset['FareBin'] = pd.qcut(train_dataset['Fare'], 4)
-train_dataset['FareBin_Code'] = label.fit_transform(train_dataset['FareBin'])
+whole_dataset['FareBin'] = pd.qcut(whole_dataset['Fare'], 4)
+whole_dataset['FareBin_Code'] = label.fit_transform(whole_dataset['FareBin'])
 
 # Age categories
-train_dataset['AgeBin'] = pd.qcut(train_dataset['Age'], 4)
-train_dataset['AgeBin_Code'] = label.fit_transform(train_dataset['AgeBin'])
+whole_dataset['AgeBin'] = pd.qcut(whole_dataset['Age'], 4)
+whole_dataset['AgeBin_Code'] = label.fit_transform(whole_dataset['AgeBin'])
 
 # Title
-train_dataset['Title'] = train_dataset['Name'].str.split(", ", expand=True)[1].str.split(".", expand=True)[0]
-train_dataset['Title_Code'] = label.fit_transform(train_dataset['Title'])
+whole_dataset['Title'] = whole_dataset['Name'].str.split(", ", expand=True)[1].str.split(".", expand=True)[0]
+whole_dataset['Title_Code'] = label.fit_transform(whole_dataset['Title'])
 
 
 # Append features
@@ -72,16 +75,19 @@ features.append('Title_Code')
 
 
 # TODO convert string features
-train_dataset['Sex_Code'] = label.fit_transform(train_dataset['Sex'])
-train_dataset["Embarked"] = train_dataset["Embarked"].map({"S": 0, "C": 1, "Q": 2})
-train_dataset['Embarked_Code'] = label.fit_transform(train_dataset['Embarked'])
+whole_dataset['Sex_Code'] = label.fit_transform(whole_dataset['Sex'])
+whole_dataset["Embarked"] = whole_dataset["Embarked"].map({"S": 0, "C": 1, "Q": 2})
+whole_dataset['Embarked_Code'] = label.fit_transform(whole_dataset['Embarked'])
 
-train_dataset['IsChild'] = [1 if i<16 else 0 for i in train_dataset.Age]
+whole_dataset['IsChild'] = [1 if i<16 else 0 for i in whole_dataset.Age]
 
 features = ['FareBin_Code', 'AgeBin_Code', 'Title_Code', 'Sex_Code', 'Embarked_Code', 'IsChild', 'Pclass']
 
 
 # TODO split data
+
+train_dataset = whole_dataset[:train_dataset_len]
+test_dataset = whole_dataset[train_dataset_len:]
 
 X_train = train_dataset.drop("Survived", axis=1)[features]
 Y_train = train_dataset["Survived"]
